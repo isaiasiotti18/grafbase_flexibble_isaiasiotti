@@ -1,11 +1,14 @@
 "use client"
 
 import { SessionInterface } from "@/common.types"
-import { ChangeEvent } from "react"
+import { ChangeEvent, useState } from "react"
 import Image from "next/image"
 import FormField from "./FormField"
 import { categoryFilters } from "@/constants"
 import CustomMenu from "./CustomMenu"
+import Button from "./Button"
+import { createNewProject, fetchToken } from "@/lib/actions"
+import { useRouter } from "next/navigation"
 
 type Props = {
   type: string,
@@ -13,29 +16,69 @@ type Props = {
 }
 
 const ProjectForm = ({ type, session }: Props) => {
+  const router = useRouter()
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
+    setIsSubmitting(true);
+
+    const { token } = await fetchToken();
+
+    try {
+      if(type === 'create') {
+        await createNewProject(form, session?.user?.id, token);
+
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error Message: ', error)
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
 
+    const file = e.target.files?.[0];
+
+    if(!file) return;
+
+    if(!file?.type.includes('image')) {
+      return alert('Please upload an image file');
+    }
+
+    const reader = new FileReader();
+
+    reader.readAsDataURL(file);
+
+    reader.onload = () => {
+      const result = reader.result as string;
+
+      handleStateChange('image', result);
+    }
   }
 
-  const handleStateChange = (fiedName: string, value: string) => {
-
+  const handleStateChange = (fieldName: string, value: string) => {
+    setForm((prevState) => ({
+      ...prevState, [fieldName]: value
+    }));
   }
 
-  const form = {
-    image: '',
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [form, setForm] = useState({
     title: '',
     description: '',
+    image: '',
     liveSiteUrl: '',
     githubUrl: '',
-  };
+    category: ''
+  });
 
   return (
-    <form action="" onSubmit={handleFormSubmit} className="flexStart form">
+    <form onSubmit={handleFormSubmit} className="flexStart form">
 
       <div className="flexStart form_image-container">
         <label htmlFor="poster" className="flexCenter form_image-label">
@@ -73,7 +116,7 @@ const ProjectForm = ({ type, session }: Props) => {
         title="Description"
         state={form.description}
         placeholder="Showcase and discover remakable developer projects."
-        setState={(value) => handleStateChange('title', value)}
+        setState={(value) => handleStateChange('description', value)}
       />
 
       <FormField
@@ -100,7 +143,16 @@ const ProjectForm = ({ type, session }: Props) => {
       />
 
       <div className="flexStart w-full">
-        <button>Create</button>
+        <Button
+          title={
+            isSubmitting
+              ? `${type === 'create' ? 'Creating' : 'Editing'}`
+              : `${type === 'create' ? 'Create' : 'Edit'}`
+          }
+          type="submit"
+          leftIcon={isSubmitting ? "" : '/plus.svg'}
+          isSubmitting={isSubmitting}
+        />
       </div>
     </form>
   )
