@@ -10,6 +10,14 @@ const serverUrl = isProduction ? process.env.NEXT_PUBLIC_SERVER_URL : 'http://lo
 
 const client = new GraphQLClient(apiUrl);
 
+const makeGraphQLRequest = async (query: string, variables = {}) => {
+  try {
+    return await client.request(query, variables);
+  } catch (err) {
+    throw err;
+  }
+};
+
 export const fetchToken = async () => {
   try {
     const response = await fetch(`${serverUrl}/api/auth/token`);
@@ -18,6 +26,7 @@ export const fetchToken = async () => {
     throw err;
   }
 };
+
 
 export const uploadImage = async (imagePath: string) => {
   try {
@@ -28,14 +37,6 @@ export const uploadImage = async (imagePath: string) => {
       }),
     });
     return response.json();
-  } catch (err) {
-    throw err;
-  }
-};
-
-const makeGraphQLRequest = async (query: string, variables = {}) => {
-  try {
-    return await client.request(query, variables);
   } catch (err) {
     throw err;
   }

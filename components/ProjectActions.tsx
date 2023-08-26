@@ -12,12 +12,12 @@ type Props = {
 }
 
 const ProjectActions = ({ projectId }: Props) => {
-    const [isDeleting, setIsDeleting] = useState<boolean>(false)
-    const router = useRouter()
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const router = useRouter();
 
     
     const handleDeleteProject = async () => {
-        setIsDeleting(true)
+        setIsDeleting(true);
         
         const { token } = await fetchToken();
 
